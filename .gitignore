@@ -1,0 +1,26 @@
+# 编译输出
+obj/
+*.o
+xshell
+
+# 文档和图片（排除在版本控制外）
+md/
+images/
+
+# 历史记录和日志
+.xshell_history
+.xshell_error
+
+# 编辑器和IDE
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# 调试文件
+core
+*.core
