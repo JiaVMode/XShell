@@ -9,6 +9,7 @@
 #include "input.h"       // 输入处理（带 Tab 补全）
 #include "history.h"     // 历史记录系统（history_init, history_add, history_cleanup）
 #include "alias.h"       // 别名管理系统（alias_init, alias_cleanup）
+#include "job.h"         // 作业管理系统（job_init, job_check_done）
 // 引入标准库
 #include <stdio.h>       // 标准输入输出（printf, fprintf, fgets, va_list）
 #include <stdlib.h>      // 标准库函数（getenv）
@@ -86,6 +87,11 @@ void shell_loop(ShellContext *ctx) {
     // 初始化别名系统
     // 功能：初始化别名表（清空所有别名）
     alias_init();
+    
+    // 初始化作业管理系统
+    // 功能：初始化后台作业列表和信号处理
+    job_init();
+    job_install_signal_handler();
     
     // 显示欢迎信息（Shell 启动时打印一次）
     printf("######## Welcome to XShell! ########\n");

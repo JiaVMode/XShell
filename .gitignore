@@ -6,6 +6,7 @@ xshell
 # 文档和图片（排除在版本控制外）
 md/
 images/
+1/
 
 # 历史记录和日志
 .xshell_history

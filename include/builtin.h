@@ -492,8 +492,14 @@ int cmd_xfg(Command *cmd, ShellContext *ctx);
 // 用法：xbg [job_id]
 int cmd_xbg(Command *cmd, ShellContext *ctx);
 
-// 未来可以在这里添加更多内置命令声明：
-
+// xsysmon 命令：系统监控
+// 功能：
+//   1. 实时显示 CPU、内存、磁盘使用情况
+//   2. 显示系统负载和运行时间
+// 对应系统命令：top (简化版)
+// 用法：xsysmon
+int cmd_xsysmon(struct Command *cmd, struct ShellContext *ctx);
+void xsysmon(void);
 
 #endif // BUILTIN_H  // 头文件保护结束
 

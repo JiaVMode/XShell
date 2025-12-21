@@ -31,6 +31,15 @@ SRC_DIR = src
 # $(变量名) 表示引用变量的值
 BUILTIN_DIR = $(SRC_DIR)/builtin
 
+# UI 源文件目录（存放 UI 系统的 .c 文件）
+UI_DIR = $(SRC_DIR)/UI
+
+# Web 源文件目录（存放网页浏览器的 .c 文件）
+WEB_DIR = $(SRC_DIR)/web
+
+# Game source directory
+GAME_DIR = $(SRC_DIR)/game
+
 # 目标文件目录（存放编译生成的 .o 文件）
 OBJ_DIR = obj
 
@@ -51,7 +60,8 @@ MAIN_SRCS = $(SRC_DIR)/main.c \
             $(SRC_DIR)/completion.c \
             $(SRC_DIR)/input.c \
             $(SRC_DIR)/history.c \
-            $(SRC_DIR)/alias.c
+            $(SRC_DIR)/alias.c \
+            $(SRC_DIR)/job.c
 
 # 内置命令源文件列表（将来添加新命令时，在这里添加）
 BUILTIN_SRCS = $(BUILTIN_DIR)/xpwd.c \
@@ -116,10 +126,22 @@ BUILTIN_SRCS = $(BUILTIN_DIR)/xpwd.c \
                $(BUILTIN_DIR)/xkill.c \
                $(BUILTIN_DIR)/xjobs.c \
                $(BUILTIN_DIR)/xfg.c \
-               $(BUILTIN_DIR)/xbg.c
+               $(BUILTIN_DIR)/xbg.c \
+               $(BUILTIN_DIR)/sysmon.c
 
-# 所有源文件（主源文件 + 内置命令源文件）
-SRCS = $(MAIN_SRCS) $(BUILTIN_SRCS)
+# UI 源文件列表
+UI_SRCS = $(UI_DIR)/xui.c \
+          $(UI_DIR)/xui_term.c \
+          $(UI_DIR)/xui_widgets.c
+
+# Web 源文件列表
+WEB_SRCS = $(WEB_DIR)/xweb.c
+
+# Game sources
+GAME_SRCS = $(GAME_DIR)/snake.c $(GAME_DIR)/tetris.c $(GAME_DIR)/game2048.c $(GAME_DIR)/score.c
+
+# All sources
+SRCS = $(MAIN_SRCS) $(BUILTIN_SRCS) $(UI_SRCS) $(WEB_SRCS) $(GAME_SRCS)
 
 # ==================== 目标文件列表 ====================
 # 主要目标文件列表（.o 是编译后的二进制目标文件）
@@ -132,7 +154,8 @@ MAIN_OBJS = $(OBJ_DIR)/main.o \
             $(OBJ_DIR)/completion.o \
             $(OBJ_DIR)/input.o \
             $(OBJ_DIR)/history.o \
-            $(OBJ_DIR)/alias.o
+            $(OBJ_DIR)/alias.o \
+            $(OBJ_DIR)/job.o
 
 # 内置命令目标文件列表
 BUILTIN_OBJS = $(OBJ_DIR)/builtin/xpwd.o \
@@ -197,10 +220,22 @@ BUILTIN_OBJS = $(OBJ_DIR)/builtin/xpwd.o \
                $(OBJ_DIR)/builtin/xkill.o \
                $(OBJ_DIR)/builtin/xjobs.o \
                $(OBJ_DIR)/builtin/xfg.o \
-               $(OBJ_DIR)/builtin/xbg.o
+               $(OBJ_DIR)/builtin/xbg.o \
+               $(OBJ_DIR)/builtin/sysmon.o
+
+# UI 目标文件列表
+UI_OBJS = $(OBJ_DIR)/UI/xui.o \
+          $(OBJ_DIR)/UI/xui_term.o \
+          $(OBJ_DIR)/UI/xui_widgets.o
+
+# Web 目标文件列表
+WEB_OBJS = $(OBJ_DIR)/web/xweb.o
+
+# Game objects
+GAME_OBJS = $(OBJ_DIR)/game/snake.o $(OBJ_DIR)/game/tetris.o $(OBJ_DIR)/game/game2048.o $(OBJ_DIR)/game/score.o
 
 # 所有目标文件（用于最终链接）
-OBJS = $(MAIN_OBJS) $(BUILTIN_OBJS)
+OBJS = $(MAIN_OBJS) $(BUILTIN_OBJS) $(UI_OBJS) $(WEB_OBJS) $(GAME_OBJS)
 
 # ============================================
 # 编译规则（Make Rules）
@@ -239,6 +274,20 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 $(OBJ_DIR)/builtin/%.o: $(BUILTIN_DIR)/%.c | $(OBJ_DIR)/builtin
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# 编译 UI 源文件的规则
+# 规则：将 src/UI/*.c 编译为 obj/UI/*.o
+$(OBJ_DIR)/UI/%.o: $(UI_DIR)/%.c | $(OBJ_DIR)/UI
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# 编译 web 源文件的规则
+# 规则：将 src/web/*.c 编译为 obj/web/*.o
+$(OBJ_DIR)/web/%.o: $(WEB_DIR)/%.c | $(OBJ_DIR)/web
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compile Game
+$(OBJ_DIR)/game/%.o: $(GAME_DIR)/%.c | $(OBJ_DIR)/game
+	$(CC) $(CFLAGS) -c $< -o $@
+
 # ==================== 目录创建规则 ====================
 # 这些规则确保编译前目录存在
 # -p 参数：如果目录已存在不报错，如果父目录不存在则自动创建
@@ -250,6 +299,18 @@ $(OBJ_DIR):
 # 创建内置命令目标文件目录
 $(OBJ_DIR)/builtin:
 	mkdir -p $(OBJ_DIR)/builtin
+
+# 创建 UI 目标文件目录
+$(OBJ_DIR)/UI:
+	mkdir -p $(OBJ_DIR)/UI
+
+# 创建 web 目标文件目录
+$(OBJ_DIR)/web:
+	mkdir -p $(OBJ_DIR)/web
+
+# Create game object directory
+$(OBJ_DIR)/game:
+	mkdir -p $(OBJ_DIR)/game
 
 # 创建可执行文件目录（当前目录，通常已存在）
 $(BIN_DIR):

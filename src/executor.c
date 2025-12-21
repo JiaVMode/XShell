@@ -4,6 +4,10 @@
 // 引入自定义头文件
 #include "executor.h"                                           // 命令执行函数声明
 #include "builtin.h"                                            // 内置命令函数声明（cmd_xpwd, cmd_quit等）
+#include "xui.h"                                                 // UI 系统函数声明
+#include "xweb.h"                                                // 网页浏览器函数声明
+#include "xgame.h"                                               // 游戏函数声明
+#include "job.h"                                                 // 作业管理函数声明
 
 // 引入标准库
 #include <stdio.h>                                              // 标准输入输出（fprintf）
@@ -403,14 +407,31 @@ static int execute_external(Command *cmd, ShellContext *ctx) {
         exit(1);
     } else {
         // 父进程
-        int status;
-        waitpid(pid, &status, 0);
         free(exec_path);
         
-        if (WIFEXITED(status)) {
-            return WEXITSTATUS(status);
+        // 检查是否后台执行
+        if (cmd->background) {
+            // 后台执行：不等待子进程，添加到作业列表
+            // 重建命令字符串
+            char cmd_str[256] = "";
+            for (int i = 0; i < cmd->arg_count && strlen(cmd_str) < 240; i++) {
+                if (i > 0) strcat(cmd_str, " ");
+                strncat(cmd_str, cmd->args[i], 240 - strlen(cmd_str));
+            }
+            
+            int job_id = job_add(pid, cmd_str);
+            printf("[%d] %d\n", job_id, pid);
+            return 0;
         } else {
-            return -1;
+            // 前台执行：等待子进程
+            int status;
+            waitpid(pid, &status, 0);
+            
+            if (WIFEXITED(status)) {
+                return WEXITSTATUS(status);
+            } else {
+                return -1;
+            }
         }
     }
 }
@@ -805,6 +826,12 @@ int is_builtin(const char *cmd_name) {
         "xjobs",                                                // 显示后台任务（对应系统的jobs）
         "xfg",                                                  // 将后台任务调到前台（对应系统的fg）
         "xbg",                                                  // 将任务放到后台（对应系统的bg）
+        "xui",                                                  // 终端 UI 界面（XShell 特有功能）
+        "xweb",                                                 // 网页浏览器（XShell 特有功能）
+        "xsnake",                                               // 贪吃蛇游戏（XShell 特有功能）
+        "xtetris",                                              // 俄罗斯方块（XShell 特有功能）
+        "x2048",                                                // 2048游戏（XShell 特有功能）
+        "xsysmon",                                              // 系统监控（XShell 特有功能）
         "quit",                                                 // 退出Shell（Shell 专有命令，不加x）
         NULL                                                    // 数组结束标记（用于判断遍历结束）
     };
@@ -1021,6 +1048,24 @@ int execute_builtin(Command *cmd, ShellContext *ctx) {
     }
     else if (strcmp(cmd->name, "xbg") == 0) {                  // 匹配 xbg 命令
         return cmd_xbg(cmd, ctx);                              // 调用 xbg 处理函数（将任务放到后台）
+    }
+    else if (strcmp(cmd->name, "xui") == 0) {                  // 匹配 xui 命令
+        return cmd_xui(cmd, ctx);                              // 调用 xui 处理函数（终端 UI）
+    }
+    else if (strcmp(cmd->name, "xweb") == 0) {                 // 匹配 xweb 命令
+        return cmd_xweb(cmd, ctx);                             // 调用 xweb 处理函数（网页浏览器）
+    }
+    else if (strcmp(cmd->name, "xsnake") == 0) {               // 匹配 xsnake 命令
+        return cmd_xsnake(cmd, ctx);                           // 调用 xsnake 处理函数（贪吃蛇游戏）
+    }
+    else if (strcmp(cmd->name, "xtetris") == 0) {
+        return cmd_xtetris(cmd, ctx);
+    }
+    else if (strcmp(cmd->name, "x2048") == 0) {
+        return cmd_x2048(cmd, ctx);
+    }
+    else if (strcmp(cmd->name, "xsysmon") == 0) {
+        return cmd_xsysmon(cmd, ctx);
     }
     else if (strcmp(cmd->name, "quit") == 0) {                  // 匹配 quit 命令
         return cmd_quit(cmd, ctx);                              // 调用 quit 处理函数（设置退出标志）

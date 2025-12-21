@@ -455,13 +455,38 @@ Command* parse_command(const char *line) {
         return NULL;
     }
     
-    // 步骤3：查找管道符号，分割命令链
+    // 步骤3：检测后台执行符号 &
+    int run_background = 0;
+    size_t line_len = strlen(line_copy);
+    
+    // 从末尾向前找，跳过空白
+    char *end_ptr = line_copy + line_len - 1;
+    while (end_ptr > line_copy && (*end_ptr == ' ' || *end_ptr == '\t')) {
+        end_ptr--;
+    }
+    
+    // 检查最后一个非空白字符是否是 &（但不是 &&）
+    if (end_ptr > line_copy && *end_ptr == '&' && *(end_ptr - 1) != '&') {
+        run_background = 1;
+        *end_ptr = '\0';  // 移除 &
+        // 再次修剪尾部空白
+        end_ptr--;
+        while (end_ptr > line_copy && (*end_ptr == ' ' || *end_ptr == '\t')) {
+            *end_ptr = '\0';
+            end_ptr--;
+        }
+    }
+    
+    // 步骤4：查找管道符号，分割命令链
     char *pipe_pos = strchr(line_copy, '|');
     
     if (pipe_pos == NULL) {
         // 没有管道，解析单个命令
         char *end = line_copy + strlen(line_copy);
         Command *cmd = parse_single_command(line_copy, end);
+        if (cmd != NULL) {
+            cmd->background = run_background;
+        }
         free(line_copy);
         return cmd;
     } else {

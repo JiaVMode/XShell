@@ -42,6 +42,9 @@ typedef struct Command
     // 命令链信息（&& 和 ||）
     struct Command *chain_next;                 // 命令链中的下一个命令（NULL表示没有链）
     int chain_type;                             // 链类型：0=无, 1=&&, 2=||
+    
+    // 后台执行
+    int background;                             // 是否后台执行（以 & 结尾）
 } Command;
 
 //  函数声明
