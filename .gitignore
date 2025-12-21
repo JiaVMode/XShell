@@ -11,6 +11,7 @@ images/
 # 历史记录和日志
 .xshell_history
 .xshell_error
+*.md
 
 # 编辑器和IDE
 *.swp
