@@ -12,9 +12,12 @@ images/
 .xshell_history
 .xshell_error
 # 排除特定文档（但保留 README.md）
+
+
 report.md
 test.md
 !README.md
+
 
 # 编辑器和IDE
 *.swp
