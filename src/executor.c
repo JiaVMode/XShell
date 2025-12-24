@@ -681,18 +681,76 @@ static int execute_single_command(Command *cmd, ShellContext *ctx) {
                 }
             }
         } else {
-            int result = execute_builtin(cmd, ctx);
-            // 清理展开的参数
-            if (expanded_args != NULL) {
-                if (expanded_cmd.args != NULL && expanded_cmd.args != cmd->args) {
-                    free(expanded_cmd.args);
+            // 检查是否后台执行内置命令
+            if (cmd->background) {
+                // 后台执行：fork 子进程执行内置命令
+                pid_t pid = fork();
+                if (pid < 0) {
+                    perror("fork");
+                    // 清理展开的参数
+                    if (expanded_args != NULL) {
+                        if (expanded_cmd.args != NULL && expanded_cmd.args != cmd->args) {
+                            free(expanded_cmd.args);
+                        }
+                        for (int i = 0; expanded_args[i] != NULL; i++) {
+                            free(expanded_args[i]);
+                        }
+                        free(expanded_args);
+                    }
+                    return -1;
                 }
-                for (int i = 0; expanded_args[i] != NULL; i++) {
-                    free(expanded_args[i]);
+                
+                if (pid == 0) {
+                    // 子进程：执行内置命令并退出
+                    int result = execute_builtin(cmd, ctx);
+                    // 清理展开的参数
+                    if (expanded_args != NULL) {
+                        if (expanded_cmd.args != NULL && expanded_cmd.args != cmd->args) {
+                            free(expanded_cmd.args);
+                        }
+                        for (int i = 0; expanded_args[i] != NULL; i++) {
+                            free(expanded_args[i]);
+                        }
+                        free(expanded_args);
+                    }
+                    exit(result);
+                } else {
+                    // 父进程：添加到作业列表
+                    char cmd_str[256] = "";
+                    for (int i = 0; i < cmd->arg_count && strlen(cmd_str) < 240; i++) {
+                        if (i > 0) strcat(cmd_str, " ");
+                        strncat(cmd_str, cmd->args[i], 240 - strlen(cmd_str));
+                    }
+                    
+                    int job_id = job_add(pid, cmd_str);
+                    printf("[%d] %d\n", job_id, pid);
+                    
+                    // 清理展开的参数
+                    if (expanded_args != NULL) {
+                        if (expanded_cmd.args != NULL && expanded_cmd.args != cmd->args) {
+                            free(expanded_cmd.args);
+                        }
+                        for (int i = 0; expanded_args[i] != NULL; i++) {
+                            free(expanded_args[i]);
+                        }
+                        free(expanded_args);
+                    }
+                    return 0;
                 }
-                free(expanded_args);
+            } else {
+                int result = execute_builtin(cmd, ctx);
+                // 清理展开的参数
+                if (expanded_args != NULL) {
+                    if (expanded_cmd.args != NULL && expanded_cmd.args != cmd->args) {
+                        free(expanded_cmd.args);
+                    }
+                    for (int i = 0; expanded_args[i] != NULL; i++) {
+                        free(expanded_args[i]);
+                    }
+                    free(expanded_args);
+                }
+                return result;
             }
-            return result;
         }
     }
     
